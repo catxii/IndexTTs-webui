@@ -560,6 +560,22 @@ body.modal-open {
   flex-wrap: wrap;
 }
 
+.role-category-filter {
+  margin: 0 0 12px;
+}
+
+.role-category-select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 36px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .role-category-tabs {
   display: flex;
   gap: 6px;
@@ -1074,6 +1090,21 @@ button:hover,
 
 .danger-soft {
   color: var(--danger);
+}
+
+.toolbar-danger-btn {
+  color: var(--danger);
+  border-color: rgba(243, 95, 95, 0.28);
+  background: linear-gradient(180deg, rgba(255, 248, 248, 0.98), rgba(255, 239, 239, 0.96));
+}
+
+.toolbar-danger-btn:hover {
+  box-shadow: 0 10px 22px rgba(243, 95, 95, 0.12);
+}
+
+.toolbar-delete-icon {
+  font-size: 15px;
+  line-height: 1;
 }
 
 .icon {

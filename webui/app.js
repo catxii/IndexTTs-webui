@@ -187,6 +187,7 @@ const els = {
   importRolesBtn: null,
   importRolesInput: null,
   addLineBtn: document.querySelector("#addLineBtn"),
+  exportLinesBtn: document.querySelector("#exportLinesBtn"),
   openProjectManagerBtn: document.querySelector("#openProjectManagerBtn"),
   newProjectBtn: document.querySelector("#newProjectBtn"),
   saveCurrentProjectBtn: document.querySelector("#saveCurrentProjectBtn"),
@@ -2290,6 +2291,27 @@ function importScriptText(rawText) {
   showToast(`已导入 ${addedLines.length} 条对白${skippedText}。`);
 }
 
+function exportCurrentLines() {
+  const rows = state.lines
+    .map((line) => {
+      const text = (line.text || "").replace(/\r\n?/g, "\n").split("\n").map((item) => item.trim()).filter(Boolean).join(" ");
+      if (!text) return "";
+      const role = getRoleById(line.roleId);
+      const roleName = (role?.name || "未命名角色").trim() || "未命名角色";
+      return `${roleName}| ${text}`;
+    })
+    .filter(Boolean);
+
+  if (!rows.length) {
+    showToast("当前没有可导出的台词。", true);
+    return;
+  }
+
+  const exportName = (state.currentProjectName || state.settings.outputPrefix || "台词").trim() || "台词";
+  downloadText(rows.join("\n"), `${exportName}_台词.txt`);
+  showToast(`已导出 ${rows.length} 条台词。`);
+}
+
 function addBlankLine() {
   state.lines.push(createLine({
     roleId: state.roles[0]?.id || "",
@@ -3115,11 +3137,28 @@ function renderCategoryTabs(container, activeValue, onSelect) {
   });
 }
 
+function renderCategorySelect(container, activeValue, onSelect) {
+  if (!container) return;
+  container.innerHTML = "";
+  const select = document.createElement("select");
+  select.className = "role-category-select";
+  select.setAttribute("aria-label", "选择书单");
+  getRoleCategoryTabs().forEach((tab) => {
+    const option = document.createElement("option");
+    option.value = tab.value;
+    option.textContent = tab.label;
+    select.append(option);
+  });
+  select.value = activeValue || "__all__";
+  select.addEventListener("change", () => onSelect(select.value));
+  container.append(select);
+}
+
 function ensureRoleCategoryTabsUI() {
   if (els.roleCategoryTabs || !els.roleList) return;
   const tabs = document.createElement("div");
   tabs.id = "roleCategoryTabs";
-  tabs.className = "role-category-tabs";
+  tabs.className = "role-category-filter";
   els.roleList.insertAdjacentElement("beforebegin", tabs);
   els.roleCategoryTabs = tabs;
 }
@@ -3324,6 +3363,18 @@ function exportRoles(category = "") {
 
 function downloadJson(payload, filename) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename.replace(/[\\/:*?"<>|]/g, "_");
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadText(content, filename) {
+  const blob = new Blob(["\ufeff", content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -4229,7 +4280,7 @@ function updateVoiceCenterCard(voiceId) {
 function renderRoles() {
   els.roleList.innerHTML = "";
   ensureRoleCategoryTabsUI();
-  renderCategoryTabs(els.roleCategoryTabs, state.roleCategoryFilter, (value) => {
+  renderCategorySelect(els.roleCategoryTabs, state.roleCategoryFilter, (value) => {
     state.roleCategoryFilter = value;
     renderRoles();
   });
@@ -5376,8 +5427,12 @@ function bindEvents() {
     closeCurrentProject();
   });
 
-  els.clearCurrentDialoguesBtn.addEventListener("click", () => {
-    clearCurrentDialogues();
+  els.clearCurrentDialoguesBtn.addEventListener("click", async () => {
+    const ok = await confirmDelete("确定清空当前所有对白台词？这个操作不会删除角色和音色，但会移除当前台词列表。", {
+      title: "确认清空对白",
+      confirmText: "清空对白",
+    });
+    if (ok) clearCurrentDialogues();
   });
 
   els.addRoleBtn.addEventListener("click", () => {
@@ -5391,6 +5446,10 @@ function bindEvents() {
 
   els.addLineBtn.addEventListener("click", () => {
     openScriptImportModal();
+  });
+
+  els.exportLinesBtn?.addEventListener("click", () => {
+    exportCurrentLines();
   });
 
   els.pasteScriptBtn?.addEventListener("click", () => {
@@ -5655,7 +5714,13 @@ function bindEvents() {
   els.generateAllBtn.addEventListener("click", generateAll);
   els.generateMissingBtn.addEventListener("click", generateMissingOnly);
   els.mergeBtn.addEventListener("click", mergeGenerated);
-  els.clearOutputsBtn.addEventListener("click", clearOutputs);
+  els.clearOutputsBtn.addEventListener("click", async () => {
+    const ok = await confirmDelete("确定清空所有生成结果？台词会保留，但单条音频、合并结果和下载列表会被清除。", {
+      title: "确认清空生成结果",
+      confirmText: "清空结果",
+    });
+    if (ok) clearOutputs();
+  });
   els.exportBtn.addEventListener("click", exportProject);
   els.importBtn.addEventListener("click", () => els.importInput.click());
   els.importInput.addEventListener("change", (event) => {

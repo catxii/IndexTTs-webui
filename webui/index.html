@@ -24,8 +24,12 @@
         <span class="toolbar-label">内容管理</span>
         <button id="openProjectManagerBtn" class="secondary">项目管理</button>
         <button id="addLineBtn" class="primary">添加台词</button>
-        <button id="clearCurrentDialoguesBtn" class="secondary">清空当前对白</button>
+        <button id="exportLinesBtn" class="secondary">导出台词</button>
         <button id="insertDemoBtn" class="secondary">插入示例</button>
+        <button id="clearCurrentDialoguesBtn" class="secondary toolbar-danger-btn" type="button">
+          <span class="toolbar-delete-icon" aria-hidden="true">🗑</span>
+          <span>清空当前对白</span>
+        </button>
         <input id="importInput" type="file" accept="application/json" hidden>
       </div>
       <div class="toolbar-row">
@@ -35,7 +39,10 @@
           <button id="mergeBtn" class="secondary" type="button">合并音频</button>
           <button id="openMergedAudiosBtn" class="secondary merge-menu-btn" type="button" title="打开合并音频下载列表" aria-label="打开合并音频下载列表">▾</button>
         </div>
-        <button id="clearOutputsBtn" class="secondary danger-soft">清空生成结果</button>
+        <button id="clearOutputsBtn" class="secondary toolbar-danger-btn" type="button">
+          <span class="toolbar-delete-icon" aria-hidden="true">🗑</span>
+          <span>清空生成结果</span>
+        </button>
       </div>
       <div id="mergeProgressPanel" class="merge-progress-panel hidden">
         <div class="merge-progress-head">
